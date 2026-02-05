@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Fruit Detection AI</title>
+
+<!-- TensorFlow & Teachable Machine -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", Arial, sans-serif;
+
+    background:
+        radial-gradient(circle at 20% 30%, rgba(255,99,71,0.25), transparent 40%),
+        radial-gradient(circle at 80% 20%, rgba(255,215,0,0.25), transparent 40%),
+        radial-gradient(circle at 50% 80%, rgba(144,238,144,0.25), transparent 40%),
+        linear-gradient(135deg, #2ecc71, #27ae60);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 380px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 26px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+/* HEADER */
+.header {
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 15px; /* ✅ requested size */
+    color: #2c3e50;
+}
+
+.header p {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+/* UPLOAD */
+.upload-box {
+    border: 2px dashed #27ae60;
+    border-radius: 16px;
+    padding: 22px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.upload-box:hover {
+    background: #eafaf1;
+}
+
+.upload-box span {
+    font-size: 14px;
+    font-weight: bold;
+    color: #27ae60;
+}
+
+/* PREVIEW */
+.preview {
+    margin-top: 18px;
+    display: none;
+}
+
+.preview img {
+    width: 100%;
+    border-radius: 16px;
+}
+
+/* RESULT */
+.result {
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 16px;
+    background: #f0fdf4;
+    display: none;
+}
+
+.result .label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #27ae60;
+}
+
+.result .confidence {
+    font-size: 13px;
+    color: #555;
+}
+
+/* FOOTER */
+.footer {
+    margin-top: 22px;
+    font-size: 11px;
+    color: #777;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>watermelon,lemon,kiwi,mango,banana,tomato</h1>
+        <p>Image Classification using Teachable Machine</p>
+    </div>
+
+    <!-- CLICKABLE UPLOAD -->
+    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+        <span>Upload fruit image</span>
+    </div>
+
+    <input
+        type="file"
+        id="fileInput"
+        accept="image/*"
+        onchange="predictImage(event)"
+        style="display:none;"
+    >
+
+    <div class="preview" id="previewBox">
+        <img id="preview">
+    </div>
+
+    <div class="result" id="resultBox">
+        <div class="label" id="resultLabel"></div>
+        <div class="confidence" id="resultProb"></div>
+    </div>
+
+    <div class="footer">
+        Powered by <b>Kenneth XII-4</b>
+    </div>
+</div>
+
+<script>
+/* ✅ YOUR TEACHABLE MACHINE MODEL */
+const MODEL_URL = "https://teachablemachine.withgoogle.com/models/NOqeGT4Jp/";
+
+let model = null;
+
+// Load model
+async function loadModel() {
+    try {
+        model = await tmImage.load(
+            MODEL_URL + "model.json",
+            MODEL_URL + "metadata.json"
+        );
+        console.log("Model loaded");
+    } catch (err) {
+        alert("Failed to load model");
+        console.error(err);
+    }
+}
+loadModel();
+
+// Predict image
+async function predictImage(event) {
+    if (!model) {
+        alert("Model not ready yet");
+        return;
+    }
+
+    const img = document.getElementById("preview");
+    const previewBox = document.getElementById("previewBox");
+    const resultBox = document.getElementById("resultBox");
+
+    img.src = URL.createObjectURL(event.target.files[0]);
+    previewBox.style.display = "block";
+
+    img.onload = async () => {
+        const predictions = await model.predict(img);
+        predictions.sort((a, b) => b.probability - a.probability);
+
+        document.getElementById("resultLabel").innerText =
+            "Result: " + predictions[0].className;
+
+        document.getElementById("resultProb").innerText =
+            "Confidence: " + (predictions[0].probability * 100).toFixed(2) + "%";
+
+        resultBox.style.display = "block";
+    };
+}
+</script>
+
+</body>
+</html>
